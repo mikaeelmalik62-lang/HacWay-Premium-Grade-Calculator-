@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GradeHub Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #f0f2f8; --surface: #ffffff; --surface2: #f0f2f8; --border: #dde1ec;
+  --accent: #3b73e8; --accent2: #6b48e8; --green: #16a37a; --yellow: #d48a0a;
+  --red: #dc3545; --blue: #3b73e8; --text: #1a1d2e; --muted: #6b7280; --card-r: 16px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;font-family:'Inter',sans-serif;background:var(--bg);color:var(--text);overflow:hidden;}
+.app{display:flex;height:100vh;}
+.sidebar{width:280px;min-width:280px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;overflow:hidden;}
+.main{flex:1;overflow:hidden;display:flex;flex-direction:column;}
+.sidebar-header{padding:22px 20px 16px;border-bottom:1px solid var(--border);}
+.logo{font-family:'Inter',sans-serif;font-weight:800;font-size:1.25rem;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.logo span{font-weight:500;color:var(--muted);-webkit-text-fill-color:var(--muted);font-size:0.68rem;display:block;margin-top:2px;font-family:'Inter',sans-serif;letter-spacing:0.5px;}
+.gpa-pill{margin-top:12px;background:linear-gradient(135deg,#3b73e815,#6b48e815);border:1px solid #3b73e830;border-radius:12px;padding:10px 14px;display:flex;justify-content:space-between;align-items:center;}
+.gpa-label{font-size:0.65rem;color:var(--muted);text-transform:uppercase;letter-spacing:1px;font-weight:600;}
+.gpa-val{font-family:'Inter',sans-serif;font-size:1.35rem;font-weight:800;background:linear-gradient(135deg,var(--accent),var(--accent2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.class-list{flex:1;overflow-y:auto;padding:12px;}
+.class-list::-webkit-scrollbar{width:4px;}
+.class-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.sidebar h4{font-size:0.6rem;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);padding:4px 8px 8px;font-weight:600;}
+.class-item{padding:11px 14px;border-radius:12px;cursor:pointer;transition:all 0.15s;display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;border:1px solid transparent;}
+.class-item:hover{background:var(--surface2);}
+.class-item.active{background:linear-gradient(135deg,#3b73e810,#6b48e810);border-color:#3b73e830;}
+.ci-left{min-width:0;}
+.ci-name{font-weight:600;font-size:0.83rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);}
+.ci-sub{font-size:0.68rem;color:var(--muted);margin-top:2px;}
+.ci-avg{font-family:'Inter',sans-serif;font-weight:700;font-size:0.83rem;padding:3px 8px;border-radius:8px;min-width:42px;text-align:center;}
+.topbar{padding:20px 32px 0;display:flex;justify-content:space-between;align-items:center;}
+.topbar-title{font-family:'Inter',sans-serif;font-weight:800;font-size:1.35rem;color:var(--text);}
+.topbar-tabs{display:flex;gap:3px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:4px;}
+.tab-btn{padding:7px 18px;border-radius:8px;border:none;background:none;color:var(--muted);font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:500;cursor:pointer;transition:all 0.15s;}
+.tab-btn.active{background:var(--accent);color:#fff;font-weight:600;}
+.content-area{flex:1;overflow-y:auto;padding:20px 32px 32px;}
+.content-area::-webkit-scrollbar{width:5px;}
+.content-area::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px;}
+.view{display:none;}.view.active{display:block;}
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px;}
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:18px 20px;}
+.stat-label{font-size:0.65rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:600;}
+.stat-val{font-family:'Inter',sans-serif;font-size:1.9rem;font-weight:800;margin-top:4px;}
+.stat-sub{font-size:0.72rem;color:var(--muted);margin-top:2px;}
+.dash-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+.dash-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:20px;}
+.dash-card h3{font-family:'Inter',sans-serif;font-size:0.75rem;font-weight:700;margin-bottom:16px;color:var(--muted);text-transform:uppercase;letter-spacing:0.5px;}
+.dash-card.full{grid-column:1/-1;}
+.grade-bar-row{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.gbr-name{font-size:0.78rem;width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--text);font-weight:500;}
+.gbr-track{flex:1;height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;}
+.gbr-fill{height:100%;border-radius:4px;transition:width 0.6s cubic-bezier(.4,0,.2,1);}
+.gbr-val{font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:700;width:48px;text-align:right;}
+.class-hero{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:24px;margin-bottom:16px;display:flex;gap:24px;align-items:flex-start;}
+.hero-score{text-align:center;min-width:120px;}
+.hero-avg{font-family:'Inter',sans-serif;font-size:3rem;font-weight:800;line-height:1;}
+.hero-letter{font-size:1.1rem;font-weight:700;opacity:0.7;margin-top:4px;}
+.hero-gpa{font-size:0.7rem;color:var(--muted);margin-top:6px;padding:3px 8px;background:var(--surface2);border-radius:6px;display:inline-block;font-weight:600;}
+.hero-cats{flex:1;display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.cat-mini{background:var(--surface2);border-radius:12px;padding:12px;text-align:center;}
+.cat-mini-label{font-size:0.62rem;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);font-weight:600;}
+.cat-mini-val{font-family:'Inter',sans-serif;font-size:1.35rem;font-weight:800;margin-top:4px;}
+.cat-mini-w{font-size:0.68rem;color:var(--muted);}
+.section-title{font-family:'Inter',sans-serif;font-size:0.78rem;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin:20px 0 10px;display:flex;justify-content:space-between;align-items:center;}
+.small-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:5px 12px;border-radius:8px;font-size:0.75rem;cursor:pointer;font-family:'Inter',sans-serif;font-weight:600;transition:all 0.15s;}
+.small-btn:hover{border-color:var(--accent);color:var(--accent);}
+.small-btn.primary{background:var(--accent);border-color:var(--accent);color:#fff;}
+.small-btn.primary:hover{opacity:0.88;}
+.small-btn.success{background:var(--green);border-color:var(--green);color:#fff;}
+.small-btn.success:hover{opacity:0.88;}
+.assign-table{width:100%;border-collapse:collapse;}
+.assign-table th{font-size:0.63rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);font-weight:700;background:var(--surface2);}
+.assign-table td{padding:10px 14px;border-bottom:1px solid var(--border);font-size:0.85rem;color:var(--text);}
+.assign-table tr:last-child td{border-bottom:none;}
+.assign-table tr:hover td{background:#3b73e806;}
+.assign-table tr.editing td{background:#fffbeb;border-bottom:1px solid #f5c54260;}
+.cat-tag{font-size:0.65rem;padding:3px 8px;border-radius:6px;font-weight:600;}
+.score-chip{font-family:'Inter',sans-serif;font-weight:700;font-size:0.85rem;}
+.del-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;transition:color 0.15s;padding:4px 7px;border-radius:6px;font-weight:600;}
+.del-btn:hover{color:var(--red);background:#dc354515;}
+.edit-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:0.8rem;transition:all 0.15s;padding:4px 7px;border-radius:6px;font-weight:600;margin-right:2px;}
+.edit-btn:hover{color:var(--accent);background:#3b73e815;}
+.save-btn{background:var(--green);border:none;color:#fff;cursor:pointer;font-size:0.72rem;padding:4px 10px;border-radius:6px;font-weight:600;margin-right:3px;transition:opacity 0.15s;}
+.save-btn:hover{opacity:0.85;}
+.cancel-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);cursor:pointer;font-size:0.72rem;padding:4px 10px;border-radius:6px;font-weight:600;transition:all 0.15s;}
+.cancel-btn:hover{border-color:var(--red);color:var(--red);}
+.edit-input{background:var(--surface);border:1.5px solid var(--accent);color:var(--text);padding:5px 8px;border-radius:7px;font-size:0.82rem;font-family:'Inter',sans-serif;outline:none;width:100%;}
+.edit-input-score{width:70px;}
+.edit-select{background:var(--surface);border:1.5px solid var(--accent);color:var(--text);padding:5px 8px;border-radius:7px;font-size:0.82rem;font-family:'Inter',sans-serif;outline:none;}
+.add-form{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:20px;margin-top:12px;display:none;}
+.add-form.open{display:block;}
+.form-row{display:grid;grid-template-columns:2fr 1fr 1fr auto;gap:10px;align-items:end;}
+.form-group label{display:block;font-size:0.63rem;text-transform:uppercase;letter-spacing:1px;color:var(--muted);margin-bottom:6px;font-weight:700;}
+.form-group input,.form-group select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 12px;border-radius:10px;font-size:0.85rem;font-family:'Inter',sans-serif;outline:none;transition:border-color 0.15s;}
+.form-group input:focus,.form-group select:focus{border-color:var(--accent);}
+.form-group select option{background:var(--surface);}
+.whatif-card{background:linear-gradient(135deg,#d48a0a10,#f5954210);border:1px solid #d48a0a30;border-radius:var(--card-r);padding:20px;margin-top:16px;}
+.whatif-card h3{font-family:'Inter',sans-serif;font-size:0.85rem;color:var(--yellow);margin-bottom:14px;font-weight:700;}
+.wi-row{display:flex;gap:10px;align-items:center;}
+.wi-row select,.wi-row input{background:var(--surface);border:1px solid #d48a0a30;color:var(--text);padding:9px 12px;border-radius:10px;font-size:0.85rem;font-family:'Inter',sans-serif;outline:none;}
+.wi-result{margin-top:12px;background:var(--surface);border-radius:10px;padding:12px 16px;font-family:'Inter',sans-serif;font-size:1.05rem;font-weight:700;color:var(--yellow);text-align:center;border:1px dashed #d48a0a44;}
+.chart-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);padding:24px;margin-bottom:16px;}
+.chart-wrap h3{font-family:'Inter',sans-serif;font-size:0.8rem;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;color:var(--muted);margin-bottom:20px;}
+canvas{display:block;}
+.empty{text-align:center;padding:60px 20px;color:var(--muted);}
+.empty-icon{font-size:3rem;margin-bottom:12px;}
+.empty p{font-size:0.9rem;font-weight:500;}
+.toast{position:fixed;bottom:24px;right:24px;background:var(--green);color:#fff;padding:10px 20px;border-radius:12px;font-weight:600;font-size:0.85rem;opacity:0;transform:translateY(10px);transition:all 0.3s;pointer-events:none;z-index:999;}
+.toast.show{opacity:1;transform:translateY(0);}
+*{scrollbar-width:thin;scrollbar-color:var(--border) transparent;}
+.c-green{color:var(--green);}.c-blue{color:var(--blue);}.c-yellow{color:var(--yellow);}.c-red{color:var(--red);}.c-muted{color:var(--muted);}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">GradeHub<span>HAC TRACKER PRO</span></div>
+      <div class="gpa-pill">
+        <div><div class="gpa-label">Overall GPA</div><div class="gpa-val" id="sidebarGPA">—</div></div>
+        <div style="text-align:right"><div class="gpa-label">Avg</div><div style="font-family:'Inter',sans-serif;font-weight:800;font-size:1rem;color:var(--text);" id="sidebarAvg">—</div></div>
+      </div>
+    </div>
+    <div class="class-list"><h4>My Schedule</h4><div id="sidebarList"></div></div>
+  </div>
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbarTitle">Dashboard</div>
+      <div class="topbar-tabs">
+        <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
+        <button class="tab-btn" onclick="switchTab('class')">Class Detail</button>
+        <button class="tab-btn" onclick="switchTab('trends')">Trends</button>
+      </div>
+    </div>
+    <div class="content-area">
+      <div class="view active" id="view-dashboard">
+        <div class="stats-row" id="statsRow"></div>
+        <div class="dash-grid" id="dashGrid"></div>
+      </div>
+      <div class="view" id="view-class">
+        <div id="classContent"><div class="empty"><div class="empty-icon">📚</div><p>Select a class from the sidebar</p></div></div>
+      </div>
+      <div class="view" id="view-trends">
+        <div class="chart-wrap"><h3>Grade Overview — All Classes</h3><canvas id="trendsChart" height="260"></canvas></div>
+        <div class="chart-wrap"><h3>Category Breakdown (Current Class)</h3><canvas id="catChart" height="180"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const CLASSES = [
+  { id:'ath',   name:'Athletics Boys 7',        code:'7721-1',     per:'1', weights:{kt:1.00,ag:0,co:0} },
+  { id:'cs',    name:'Fundamentals of Comp Sci', code:'8449MS-2',   per:'2', weights:{kt:0.70,ag:0.15,co:0.15} },
+  { id:'adv',   name:'Advisory',                 code:'8705-11',    per:'3', weights:{kt:0.70,ag:0.15,co:0.15} },
+  { id:'band',  name:'Band MS 2',                code:'6711-1',     per:'4', weights:{kt:0,ag:0.50,co:0.50} },
+  { id:'lunch', name:'Lunch',                    code:'8700-1',     per:'5', weights:{kt:0.70,ag:0.15,co:0.15} },
+  { id:'la7',   name:'Language Arts 7 Adv',      code:'1701ADV-12', per:'6', weights:{kt:0.70,ag:0.15,co:0.15} },
+  { id:'ss7',   name:'Social Studies 7',         code:'4701-9',     per:'7', weights:{kt:0.70,ag:0.15,co:0.15} },
+  { id:'ma7',   name:'Math 7/8',                 code:'2713-5',     per:'8', weights:{kt:0.70,ag:0.15,co:0} },
+  { id:'sc7',   name:'Science 7',                code:'3701-12',    per:'9', weights:{kt:0.70,ag:0.20,co:0.10} },
+];
+
+const SEED = {
+  ath:  [ {id:'s1',name:'Week 1',score:100,cat:'kt',date:'Feb 26'} ],
+  cs:   [
+    {id:'s1',name:'3.2 Interactions',score:100,cat:'ag',date:'Mar 2'},
+    {id:'s2',name:'3.2 Interactions',score:100,cat:'kt',date:'Mar 2'},
+    {id:'s3',name:'3.2 Interactions',score:100,cat:'co',date:'Mar 2'},
+    {id:'s4',name:'1.1 The App Revolution',score:100,cat:'ag',date:'Mar 4'},
+    {id:'s5',name:'1.1a App Inventor Scavenger Hunt',score:100,cat:'ag',date:'Mar 5'},
+    {id:'s6',name:'1.3 and 1.5 Germ Guide App',score:100,cat:'kt',date:'Mar 11'},
+  ],
+  band: [
+    {id:'s1',name:'Sectionals',score:100,cat:'co',date:'Feb 23'},
+    {id:'s2',name:'Supply Check',score:100,cat:'ag',date:'Feb 23'},
+    {id:'s3',name:'Pre-UIL Festival at CPHS',score:100,cat:'co',date:'Mar 6'},
+    {id:'s4',name:'AM Full Band Rehearsal',score:100,cat:'co',date:'Mar 25'},
+  ],
+  la7:  [
+    {id:'s1',name:'Informational Essay',score:80,cat:'kt',date:'Feb 23'},
+    {id:'s2',name:'Collaboration: Group Work',score:100,cat:'ag',date:'Feb 27'},
+    {id:'s3',name:'"The Great Migration" Quiz',score:100,cat:'kt',date:'Mar 9'},
+    {id:'s4',name:'Main Idea Worksheet',score:80,cat:'kt',date:'Mar 27'},
+    {id:'s5',name:'"A Crab That Climbs Trees" Quiz',score:80,cat:'kt',date:'Mar 27'},
+    {id:'s6',name:'Collaboration: Group Work',score:90,cat:'co',date:'Mar 27'},
+  ],
+  ss7:  [
+    {id:'s1',name:'Battles of the Civil War Timeline Poster',score:100,cat:'co',date:'Feb 23'},
+    {id:'s2',name:'District Assessment Two',score:97,cat:'ag',date:'Feb 23'},
+    {id:'s3',name:'Unit Five Civil War Test',score:96,cat:'kt',date:'Feb 23'},
+    {id:'s4',name:'Reconstruction Roadmap',score:93,cat:'kt',date:'Mar 2'},
+    {id:'s5',name:'Frederick Douglass Document Analysis',score:97,cat:'ag',date:'Mar 4'},
+    {id:'s6',name:'Civil War and Reconstruction Podcast',score:82,cat:'kt',date:'Mar 9'},
+  ],
+  ma7:  [
+    {id:'s1',name:'Dilations And Scale Factor Quiz',score:90,cat:'kt',date:'Feb 25'},
+    {id:'s2',name:'District Assessment 3',score:90,cat:'kt',date:'Feb 27'},
+    {id:'s3',name:'Spiral 4.5',score:100,cat:'ag',date:'Feb 27'},
+    {id:'s4',name:'Transformations Quiz',score:75,cat:'kt',date:'Mar 12'},
+    {id:'s5',name:'Spiral 5.1',score:100,cat:'ag',date:'Mar 13'},
+    {id:'s6',name:'Spiral 5.2',score:100,cat:'ag',date:'Mar 24'},
+    {id:'s7',name:'Transformations Unit Test',score:96,cat:'kt',date:'Mar 27'},
+  ],
+  sc7:  [
+    {id:'s1',name:'Lesson 12 Oxygen and Carbon Dioxide in the Blood',score:100,cat:'co',date:'Feb 24'},
+    {id:'s2',name:'L12 Formative Oxygen and Carbon Dioxide',score:95,cat:'ag',date:'Feb 26'},
+    {id:'s3',name:'Brown Bear Assessment 7.3 Open Sci Ed',score:100,cat:'kt',date:'Mar 4'},
+    {id:'s4',name:'Lesson 2.1 Investigation: Where are plants getting food molecules?',score:90,cat:'ag',date:'Mar 11'},
+    {id:'s5',name:'Plant vs Animal Cells',score:76,cat:'ag',date:'Mar 13'},
+    {id:'s6',name:'Stay alive and reproduce!',score:80,cat:'ag',date:'Mar 27'},
+  ],
+};
+
+let state = {};
+let currentClass = null;
+let currentTab = 'dashboard';
+let editingId = null;
+
+function loadState() {
+  const s = localStorage.getItem('gradehub_pro_v4');
+  if (s) { state = JSON.parse(s); }
+  else {
+    CLASSES.forEach(c => { state[c.id] = { assignments: SEED[c.id] ? SEED[c.id].map(a=>({...a})) : [] }; });
+    saveState();
+  }
+  CLASSES.forEach(c => { if (!state[c.id]) state[c.id] = { assignments: [] }; });
+}
+
+function saveState() { localStorage.setItem('gradehub_pro_v4', JSON.stringify(state)); }
+
+function getScores(id, cat) { return state[id].assignments.filter(a=>a.cat===cat).map(a=>a.score); }
+function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : null; }
+function calcAvg(id) {
+  const c=CLASSES.find(x=>x.id===id), w=c.weights;
+  const ktS=getScores(id,'kt'), agS=getScores(id,'ag'), coS=getScores(id,'co');
+  const ktA=w.kt>0&&ktS.length?avg(ktS):null;
+  const agA=w.ag>0&&agS.length?avg(agS):null;
+  const coA=w.co>0&&coS.length?avg(coS):null;
+  if(ktA===null&&agA===null&&coA===null)return null;
+  let pts=0,tw=0;
+  if(ktA!==null){pts+=ktA*w.kt;tw+=w.kt;}
+  if(agA!==null){pts+=agA*w.ag;tw+=w.ag;}
+  if(coA!==null){pts+=coA*w.co;tw+=w.co;}
+  return tw>0?pts/tw:null;
+}
+function gpaOf(pct){if(pct>=90)return 4.0;if(pct>=80)return 3.0;if(pct>=70)return 2.0;if(pct>=60)return 1.0;return 0.0;}
+function letter(pct){if(pct===null)return'—';if(pct>=90)return'A';if(pct>=80)return'B';if(pct>=70)return'C';if(pct>=60)return'D';return'F';}
+function gradeColor(pct){if(pct===null)return'var(--muted)';if(pct>=90)return'var(--green)';if(pct>=80)return'var(--blue)';if(pct>=70)return'var(--yellow)';return'var(--red)';}
+function gradeClass(pct){if(pct===null)return'c-muted';if(pct>=90)return'c-green';if(pct>=80)return'c-blue';if(pct>=70)return'c-yellow';return'c-red';}
+function overallGPA(){const g=CLASSES.filter(c=>calcAvg(c.id)!==null);return g.length?g.reduce((s,c)=>s+gpaOf(calcAvg(c.id)),0)/g.length:null;}
+function overallAvg(){const g=CLASSES.filter(c=>calcAvg(c.id)!==null);return g.length?g.reduce((s,c)=>s+calcAvg(c.id),0)/g.length:null;}
+
+function renderSidebar(){
+  const list=document.getElementById('sidebarList'); list.innerHTML='';
+  CLASSES.forEach(c=>{
+    const a=calcAvg(c.id), col=gradeColor(a);
+    const div=document.createElement('div');
+    div.className='class-item'+(currentClass===c.id?' active':'');
+    div.onclick=()=>selectClass(c.id);
+    div.innerHTML=`<div class="ci-left"><div class="ci-name">${c.name}</div><div class="ci-sub">Per ${c.per} · ${c.code}</div></div>
+      <div class="ci-avg" style="color:${col};background:${col}22">${a!==null?a.toFixed(1):'—'}</div>`;
+    list.appendChild(div);
+  });
+  const gpa=overallGPA(),oa=overallAvg();
+  document.getElementById('sidebarGPA').textContent=gpa!==null?gpa.toFixed(2):'—';
+  document.getElementById('sidebarAvg').textContent=oa!==null?oa.toFixed(1)+'%':'—';
+  document.getElementById('sidebarGPA').style.color=gpa!==null?gradeColor(gpa*25):'var(--muted)';
+}
+
+function switchTab(tab){
+  currentTab=tab;
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>{b.classList.toggle('active',['dashboard','class','trends'][i]===tab);});
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.getElementById('view-'+tab).classList.add('active');
+  if(tab==='dashboard')renderDashboard();
+  if(tab==='class')renderClassView();
+  if(tab==='trends')renderTrends();
+  const t={dashboard:'Dashboard',class:currentClass?CLASSES.find(c=>c.id===currentClass)?.name:'Class Detail',trends:'Grade Trends'};
+  document.getElementById('topbarTitle').textContent=t[tab];
+}
+
+function selectClass(id){currentClass=id;editingId=null;renderSidebar();switchTab('class');}
+
+function renderDashboard(){
+  const gpa=overallGPA(),oa=overallAvg();
+  const graded=CLASSES.filter(c=>calcAvg(c.id)!==null);
+  const best=graded.reduce((b,c)=>calcAvg(c.id)>(b?calcAvg(b.id):-1)?c:b,null);
+  const worst=graded.reduce((b,c)=>calcAvg(c.id)<(b?calcAvg(b.id):999)?c:b,null);
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-card"><div class="stat-label">Overall GPA</div><div class="stat-val ${gradeClass(gpa?gpa*25:null)}">${gpa!==null?gpa.toFixed(2):'—'}</div><div class="stat-sub">4.0 scale</div></div>
+    <div class="stat-card"><div class="stat-label">Class Average</div><div class="stat-val ${gradeClass(oa)}">${oa!==null?oa.toFixed(1)+'%':'—'}</div><div class="stat-sub">All graded classes</div></div>
+    <div class="stat-card"><div class="stat-label">Best Class</div><div class="stat-val c-green" style="font-size:1.05rem;margin-top:8px">${best?best.name.split(' ').slice(0,2).join(' '):'—'}</div><div class="stat-sub">${best?calcAvg(best.id).toFixed(1)+'%':'No grades yet'}</div></div>
+    <div class="stat-card"><div class="stat-label">Needs Attention</div><div class="stat-val c-red" style="font-size:1.05rem;margin-top:8px">${worst&&calcAvg(worst.id)<80?worst.name.split(' ').slice(0,2).join(' '):'—'}</div><div class="stat-sub">${worst&&calcAvg(worst.id)<80?calcAvg(worst.id).toFixed(1)+'%':'All good!'}</div></div>`;
+  const bars=CLASSES.map(c=>{const a=calcAvg(c.id),pct=a||0,col=gradeColor(a);
+    return`<div class="grade-bar-row"><div class="gbr-name" style="cursor:pointer" onclick="selectClass('${c.id}')">${c.name}</div>
+      <div class="gbr-track"><div class="gbr-fill" style="width:${pct}%;background:${col}"></div></div>
+      <div class="gbr-val" style="color:${col}">${a!==null?a.toFixed(1):'—'}</div></div>`;}).join('');
+  const dist={A:0,B:0,C:0,D:0,F:0};
+  graded.forEach(c=>{const l=letter(calcAvg(c.id));if(dist[l]!==undefined)dist[l]++;});
+  document.getElementById('dashGrid').innerHTML=`
+    <div class="dash-card full"><h3>All Classes</h3>${bars}</div>
+    <div class="dash-card"><h3>Grade Distribution</h3>
+      ${Object.entries(dist).map(([l,n])=>{const cols={A:'var(--green)',B:'var(--blue)',C:'var(--yellow)',D:'var(--yellow)',F:'var(--red)'};
+        return`<div class="grade-bar-row"><div class="gbr-name" style="font-family:'Inter',sans-serif;font-weight:800;font-size:1rem;color:${cols[l]};width:30px">${l}</div>
+          <div class="gbr-track"><div class="gbr-fill" style="width:${n/Math.max(graded.length,1)*100}%;background:${cols[l]}"></div></div>
+          <div class="gbr-val" style="color:${cols[l]}">${n}</div></div>`;}).join('')}
+    </div>
+    <div class="dash-card"><h3>Quick Summary</h3>
+      ${CLASSES.map(c=>{const a=calcAvg(c.id);return`<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);cursor:pointer" onclick="selectClass('${c.id}')">
+        <span style="font-size:0.8rem;font-weight:500;color:var(--text)">${c.name}</span>
+        <span style="font-family:'Inter',sans-serif;font-weight:700;font-size:0.85rem;color:${gradeColor(a)}">${letter(a)}</span></div>`;}).join('')}
+    </div>`;
+}
+
+function getCatOpts(classId) {
+  const w = CLASSES.find(x=>x.id===classId).weights;
+  return [w.kt>0?`<option value="kt">K&T (${Math.round(w.kt*100)}%)</option>`:'',w.ag>0?`<option value="ag">Agency (${Math.round(w.ag*100)}%)</option>`:'',w.co>0?`<option value="co">Collab (${Math.round(w.co*100)}%)</option>`:''].join('');
+}
+
+function renderClassView(){
+  if(!currentClass){document.getElementById('classContent').innerHTML=`<div class="empty"><div class="empty-icon">📚</div><p>Select a class from the sidebar</p></div>`;return;}
+  const c=CLASSES.find(x=>x.id===currentClass),w=c.weights;
+  const a=calcAvg(currentClass);
+  const ktA=w.kt>0?avg(getScores(currentClass,'kt')):null;
+  const agA=w.ag>0?avg(getScores(currentClass,'ag')):null;
+  const coA=w.co>0?avg(getScores(currentClass,'co')):null;
+  const assigns=state[currentClass].assignments;
+  const CL={kt:'var(--accent)',ag:'var(--green)',co:'var(--accent2)'};
+  const CB={kt:'#3b73e820',ag:'#16a37a20',co:'#6b48e820'};
+  const CN={kt:'K&T',ag:'Agency',co:'Collab'};
+  const catOpts=getCatOpts(currentClass);
+
+  const rows=assigns.length?assigns.slice().reverse().map(as=>{
+    if(editingId===as.id){
+      return`<tr class="editing">
+        <td><input class="edit-input" id="edit-name-${as.id}" value="${as.name.replace(/"/g,'&quot;')}"></td>
+        <td><select class="edit-select" id="edit-cat-${as.id}">${
+          [w.kt>0?`<option value="kt"${as.cat==='kt'?' selected':''}>K&T (${Math.round(w.kt*100)}%)</option>`:'',
+           w.ag>0?`<option value="ag"${as.cat==='ag'?' selected':''}>Agency (${Math.round(w.ag*100)}%)</option>`:'',
+           w.co>0?`<option value="co"${as.cat==='co'?' selected':''}>Collab (${Math.round(w.co*100)}%)</option>`:''].join('')
+        }</select></td>
+        <td><input class="edit-input edit-input-score" id="edit-score-${as.id}" type="number" min="0" max="100" value="${as.score}"></td>
+        <td style="color:var(--muted);font-size:0.75rem">${as.date}</td>
+        <td style="white-space:nowrap">
+          <button class="save-btn" onclick="saveEdit('${as.id}')">✓ Save</button>
+          <button class="cancel-btn" onclick="cancelEdit()">Cancel</button>
+        </td></tr>`;
+    }
+    return`<tr>
+      <td>${as.name}</td>
+      <td><span class="cat-tag" style="color:${CL[as.cat]};background:${CB[as.cat]}">${CN[as.cat]}</span></td>
+      <td><span class="score-chip" style="color:${gradeColor(as.score)}">${as.score.toFixed(1)}%</span></td>
+      <td style="color:var(--muted);font-size:0.75rem">${as.date}</td>
+      <td style="white-space:nowrap">
+        <button class="edit-btn" title="Edit" onclick="startEdit('${as.id}')">✏️ Edit</button>
+        <button class="del-btn" title="Delete" onclick="deleteAssign('${as.id}')">✕</button>
+      </td></tr>`;
+  }).join('')
+  :`<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--muted);font-size:0.85rem;font-weight:500">No assignments yet — add one below</td></tr>`;
+
+  const catMinis=[
+    w.kt>0?`<div class="cat-mini"><div class="cat-mini-label">Knowledge & Thinking</div><div class="cat-mini-val" style="color:var(--accent)">${ktA!==null?ktA.toFixed(1)+'%':'—'}</div><div class="cat-mini-w">Weight: ${Math.round(w.kt*100)}%</div></div>`:'',
+    w.ag>0?`<div class="cat-mini"><div class="cat-mini-label">Agency</div><div class="cat-mini-val" style="color:var(--green)">${agA!==null?agA.toFixed(1)+'%':'—'}</div><div class="cat-mini-w">Weight: ${Math.round(w.ag*100)}%</div></div>`:'',
+    w.co>0?`<div class="cat-mini"><div class="cat-mini-label">Collaboration</div><div class="cat-mini-val" style="color:var(--accent2)">${coA!==null?coA.toFixed(1)+'%':'—'}</div><div class="cat-mini-w">Weight: ${Math.round(w.co*100)}%</div></div>`:'',
+  ].join('');
+  const gridCols=[w.kt>0,w.ag>0,w.co>0].filter(Boolean).length;
+
+  document.getElementById('classContent').innerHTML=`
+    <div class="class-hero">
+      <div class="hero-score">
+        <div class="hero-avg" style="color:${gradeColor(a)}">${a!==null?a.toFixed(1):'—'}</div>
+        <div class="hero-letter" style="color:${gradeColor(a)}">${letter(a)}</div>
+        <div class="hero-gpa">GPA: ${a!==null?gpaOf(a).toFixed(1):'—'}</div>
+      </div>
+      <div class="hero-cats" style="grid-template-columns:repeat(${gridCols},1fr)">${catMinis}</div>
+    </div>
+    <div class="section-title"><span>Assignments (${assigns.length})</span><button class="small-btn primary" onclick="toggleAddForm()">+ Add Assignment</button></div>
+    <div class="add-form" id="addForm">
+      <div class="form-row">
+        <div class="form-group"><label>Assignment Name</label><input type="text" id="newName" placeholder="e.g. Chapter 3 Test"></div>
+        <div class="form-group"><label>Score (%)</label><input type="number" id="newScore" placeholder="e.g. 92" min="0" max="100"></div>
+        <div class="form-group"><label>Category</label><select id="newCat">${catOpts}</select></div>
+        <div class="form-group"><label>&nbsp;</label><button class="small-btn primary" style="width:100%;padding:10px" onclick="addAssignment()">Add</button></div>
+      </div>
+    </div>
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--card-r);overflow:hidden;margin-top:8px">
+      <table class="assign-table"><thead><tr><th>Assignment</th><th>Category</th><th>Score</th><th>Date</th><th>Actions</th></tr></thead><tbody>${rows}</tbody></table>
+    </div>
+    <div class="whatif-card">
+      <h3>🔍 What-If Predictor</h3>
+      <div class="wi-row">
+        <select id="wiCat" onchange="runSim()" style="flex:1.5">${catOpts}</select>
+        <input type="number" id="wiScore" placeholder="Score %" oninput="runSim()" style="flex:1;min-width:0">
+      </div>
+      <div class="wi-result" id="simResult">Enter a score to see projected grade</div>
+    </div>`;
+}
+
+function startEdit(id){
+  editingId=id;
+  renderClassView();
+  // Focus the name input after render
+  setTimeout(()=>{const el=document.getElementById('edit-name-'+id);if(el)el.focus();},50);
+}
+
+function cancelEdit(){
+  editingId=null;
+  renderClassView();
+}
+
+function saveEdit(id){
+  const nameEl=document.getElementById('edit-name-'+id);
+  const scoreEl=document.getElementById('edit-score-'+id);
+  const catEl=document.getElementById('edit-cat-'+id);
+  if(!nameEl||!scoreEl||!catEl)return;
+  const name=nameEl.value.trim()||'Assignment';
+  const score=parseFloat(scoreEl.value);
+  const cat=catEl.value;
+  if(isNaN(score)){showToast('Enter a valid score!');return;}
+  const assign=state[currentClass].assignments.find(a=>a.id===id);
+  if(assign){assign.name=name;assign.score=score;assign.cat=cat;}
+  editingId=null;
+  saveState();renderClassView();renderSidebar();showToast('Assignment updated!');
+}
+
+function toggleAddForm(){document.getElementById('addForm').classList.toggle('open');}
+
+function addAssignment(){
+  const name=document.getElementById('newName').value.trim()||'Assignment';
+  const score=parseFloat(document.getElementById('newScore').value);
+  const cat=document.getElementById('newCat').value;
+  if(isNaN(score)){showToast('Enter a valid score!');return;}
+  const today=new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'});
+  state[currentClass].assignments.push({id:Date.now().toString(),name,score,cat,date:today});
+  saveState();renderClassView();renderSidebar();showToast('Assignment added!');
+}
+
+function deleteAssign(id){
+  state[currentClass].assignments=state[currentClass].assignments.filter(a=>a.id!==id);
+  if(editingId===id)editingId=null;
+  saveState();renderClassView();renderSidebar();showToast('Removed');
+}
+
+function runSim(){
+  const score=parseFloat(document.getElementById('wiScore').value);if(isNaN(score))return;
+  const cat=document.getElementById('wiCat').value;
+  const w=CLASSES.find(x=>x.id===currentClass).weights;
+  const ktS=getScores(currentClass,'kt').slice();
+  const agS=getScores(currentClass,'ag').slice();
+  const coS=getScores(currentClass,'co').slice();
+  if(cat==='kt')ktS.push(score);else if(cat==='ag')agS.push(score);else coS.push(score);
+  const ktA=w.kt>0?avg(ktS):null,agA=w.ag>0?avg(agS):null,coA=w.co>0?avg(coS):null;
+  let pts=0,tw=0;
+  if(ktA!==null){pts+=ktA*w.kt;tw+=w.kt;}if(agA!==null){pts+=agA*w.ag;tw+=w.ag;}if(coA!==null){pts+=coA*w.co;tw+=w.co;}
+  const proj=tw>0?pts/tw:0,cur=calcAvg(currentClass),diff=cur!==null?(proj-cur):null;
+  const ds=diff!==null?(diff>=0?'+':'')+diff.toFixed(2)+'%':'';
+  document.getElementById('simResult').innerHTML=`Projected: <span style="color:${gradeColor(proj)}">${proj.toFixed(2)}%</span> ${ds?`<span style="font-size:0.75rem;color:${diff>=0?'var(--green)':'var(--red)'}">( ${ds} )</span>`:''}`;
+}
+
+function renderTrends(){
+  const labels=CLASSES.map(c=>c.name.split(' ').slice(0,2).join(' '));
+  const data=CLASSES.map(c=>{const a=calcAvg(c.id);return a!==null?parseFloat(a.toFixed(2)):null;});
+  drawBarChart('trendsChart',labels,data,CLASSES.map(c=>gradeColor(calcAvg(c.id))));
+  if(currentClass){
+    const w=CLASSES.find(x=>x.id===currentClass).weights;
+    drawCatChart('catChart',w.kt>0?avg(getScores(currentClass,'kt')):null,w.ag>0?avg(getScores(currentClass,'ag')):null,w.co>0?avg(getScores(currentClass,'co')):null,w);
+  } else {
+    const canvas=document.getElementById('catChart'),ctx=canvas.getContext('2d');
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    ctx.fillStyle='rgba(107,114,128,0.7)';ctx.font='14px Inter';ctx.textAlign='center';
+    ctx.fillText('Select a class to see category breakdown',canvas.width/2,80);
+  }
+}
+
+function drawBarChart(id,labels,data,colors){
+  const canvas=document.getElementById(id),dpr=window.devicePixelRatio||1;
+  const W=canvas.parentElement.clientWidth-48,H=260;
+  canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+  const pad={top:20,right:20,bottom:70,left:50},cW=W-pad.left-pad.right,cH=H-pad.top-pad.bottom;
+  const n=labels.length,barW=(cW/n)*0.6,gap=(cW/n)*0.4;
+  [0,25,50,75,100].forEach(v=>{
+    const y=pad.top+cH-(v/100)*cH;
+    ctx.beginPath();ctx.strokeStyle='rgba(221,225,236,0.9)';ctx.lineWidth=1;ctx.setLineDash([4,4]);
+    ctx.moveTo(pad.left,y);ctx.lineTo(pad.left+cW,y);ctx.stroke();ctx.setLineDash([]);
+    ctx.fillStyle='rgba(107,114,128,0.85)';ctx.font='11px Inter';ctx.textAlign='right';ctx.fillText(v+'%',pad.left-6,y+4);
+  });
+  const rc=c=>c.replace('var(--green)','#16a37a').replace('var(--blue)','#3b73e8').replace('var(--yellow)','#d48a0a').replace('var(--red)','#dc3545').replace('var(--muted)','#6b7280');
+  data.forEach((val,i)=>{
+    if(val===null)return;
+    const x=pad.left+i*(cW/n)+gap/2,barH=(val/100)*cH,y=pad.top+cH-barH,raw=rc(colors[i]);
+    const grad=ctx.createLinearGradient(0,y,0,y+barH);grad.addColorStop(0,raw);grad.addColorStop(1,raw+'44');
+    ctx.fillStyle=grad;ctx.shadowColor=raw;ctx.shadowBlur=6;roundRect(ctx,x,y,barW,barH,6);ctx.fill();ctx.shadowBlur=0;
+    ctx.fillStyle=raw;ctx.font='bold 11px Inter';ctx.textAlign='center';ctx.fillText(val.toFixed(1),x+barW/2,y-6);
+    ctx.fillStyle='rgba(107,114,128,0.9)';ctx.font='10px Inter';ctx.save();
+    ctx.translate(x+barW/2,pad.top+cH+10);ctx.rotate(-Math.PI/4);ctx.textAlign='right';ctx.fillText(labels[i],0,0);ctx.restore();
+  });
+}
+
+function drawCatChart(id,kt,ag,co,w){
+  const canvas=document.getElementById(id),dpr=window.devicePixelRatio||1;
+  const W=canvas.parentElement.clientWidth-48,H=180;
+  canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';
+  const ctx=canvas.getContext('2d');ctx.scale(dpr,dpr);ctx.clearRect(0,0,W,H);
+  const cats=[
+    w.kt>0?{label:`K&T (${Math.round(w.kt*100)}%)`,val:kt,col:'#3b73e8'}:null,
+    w.ag>0?{label:`Agency (${Math.round(w.ag*100)}%)`,val:ag,col:'#16a37a'}:null,
+    w.co>0?{label:`Collab (${Math.round(w.co*100)}%)`,val:co,col:'#6b48e8'}:null,
+  ].filter(Boolean);
+  const pad={top:10,bottom:10,left:130,right:60},cW=W-pad.left-pad.right,barH=36,gap=14;
+  cats.forEach((cat,i)=>{
+    const y=pad.top+i*(barH+gap);
+    ctx.fillStyle='rgba(26,29,46,0.85)';ctx.font='500 12px Inter';ctx.textAlign='right';ctx.fillText(cat.label,pad.left-10,y+barH/2+5);
+    ctx.fillStyle='rgba(240,242,248,0.95)';roundRect(ctx,pad.left,y,cW,barH,barH/2);ctx.fill();
+    const pct=cat.val!==null?cat.val/100:0;
+    if(pct>0){
+      const grad=ctx.createLinearGradient(pad.left,0,pad.left+cW,0);grad.addColorStop(0,cat.col);grad.addColorStop(1,cat.col+'88');
+      ctx.fillStyle=grad;ctx.shadowColor=cat.col;ctx.shadowBlur=6;roundRect(ctx,pad.left,y,cW*pct,barH,barH/2);ctx.fill();ctx.shadowBlur=0;
+    }
+    ctx.fillStyle=cat.val!==null?cat.col:'rgba(107,114,128,0.8)';ctx.font='bold 12px Inter';ctx.textAlign='left';
+    ctx.fillText(cat.val!==null?cat.val.toFixed(1)+'%':'—',pad.left+cW+8,y+barH/2+5);
+  });
+}
+
+function roundRect(ctx,x,y,w,h,r){
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.lineTo(x+w-r,y);ctx.arcTo(x+w,y,x+w,y+r,r);
+  ctx.lineTo(x+w,y+h-r);ctx.arcTo(x+w,y+h,x+w-r,y+h,r);ctx.lineTo(x+r,y+h);
+  ctx.arcTo(x,y+h,x,y+h-r,r);ctx.lineTo(x,y+r);ctx.arcTo(x,y,x+r,y,r);ctx.closePath();
+}
+
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2000);}
+
+loadState();renderSidebar();renderDashboard();
+</script>
+</body>
+</html>
